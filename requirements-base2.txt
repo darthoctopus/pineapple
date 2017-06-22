@@ -1,4 +1,0 @@
-matplotlib
-IVisual-alt
-pineapple
-pytest

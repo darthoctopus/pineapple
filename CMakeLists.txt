@@ -74,32 +74,6 @@ endif()
 
 include(ExternalProject)
 
-# External libraries location
-set(EXTERNAL "${PROJECT_SOURCE_DIR}/external")
-
-
-## OpenSSL
-
-if(APPLE)
-    add_custom_target(openssl) # nop
-endif()
-if(LINUX)
-    set(OPENSSL_PREFIX "${PROJECT_BINARY_DIR}/openssl-prefix")
-    set(OPENSSL_DIR "${PROJECT_BINARY_DIR}/openssl")
-    set(OPENSSL_SOURCE "${OPENSSL_PREFIX}/src/openssl")
-    ExternalProject_Add(
-        openssl-external
-        URL "${EXTERNAL}/openssl/openssl-${OPENSSL_VERSION}.tar.gz"
-        PREFIX "${OPENSSL_PREFIX}"
-        CONFIGURE_COMMAND ./config --prefix=${OPENSSL_DIR} shared no-idea no-mdc2 no-rc5
-        BUILD_COMMAND make
-        BUILD_IN_SOURCE 1
-        INSTALL_COMMAND make install
-    )
-    add_custom_target(openssl DEPENDS openssl-external)
-endif()
-
-
 ## Python
 
 set(PYTHON_PREFIX "${PROJECT_BINARY_DIR}/python${PYTHON_VERSION}-prefix")
@@ -109,104 +83,7 @@ set(PYTHON "${PYTHON_DIR}/bin/python${PYTHON_VERSION}")
 
 set(PYTHON_OPENSSL "")
 
-# Base options
-set(PYTHON_CONFIGURE_OPTIONS --enable-ipv6 --with-threads --with-fpectl)
-
-## Linux specific options
-if(LINUX)
-    set(PYTHON_OPENSSL "CPPFLAGS=-I${OPENSSL_DIR}" "LDFLAGS=-L${OPENSSL_DIR}/lib -L/usr/lib64")
-endif()
-
-## Apple specific options
-if(APPLE)
-    set(PYTHON_CONFIGURE_OPTIONS ${PYTHON_CONFIGURE_OPTIONS})
-    if(EXISTS /usr/local/include/libintl.h)
-        message(FATAL_ERROR "You need to move /usr/local/include/libintl.h somewhere else")
-    endif()
-    if (PYTHON_FRAMEWORK_BUILD)
-        set(PYTHON_CONFIGURE_OPTIONS ${PYTHON_CONFIGURE_OPTIONS} --enable-framework=${PYTHON_DIR})
-    else()
-        set(PYTHON_CONFIGURE_OPTIONS ${PYTHON_CONFIGURE_OPTIONS} darwin64-x86_64-cc)
-    endif()
-endif()
-
 set (PYTHON_PATCH_COMMAND "")
-if (USE_PYTHON3)
-    # python3 specific
-else()
-    # python2.7 specific
-    if(LINUX)
-        set(PYTHON_CONFIGURE_OPTIONS ${PYTHON_CONFIGURE_OPTIONS} --enable-unicode=ucs4)
-        set (PYTHON_PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${EXTERNAL}/python-${PYTHON_VERSION}/Setup.local ${PYTHON_SOURCE}/Modules/)
-    endif()
-endif()
-
-ExternalProject_Add(
-    python${PYTHON_VERSION}-external
-    URL "${EXTERNAL}/python-${PYTHON_VERSION}/Python-${PYTHON_FULL_VERSION}.tgz"
-    PREFIX "${PYTHON_PREFIX}"
-    PATCH_COMMAND ${PYTHON_PATCH_COMMAND}
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env ${PYTHON_OPENSSL} ./configure --prefix=${PYTHON_DIR} ${PYTHON_CONFIGURE_OPTIONS}
-    BUILD_COMMAND make
-    BUILD_IN_SOURCE 1
-    INSTALL_COMMAND make install PYTHONAPPSDIR=${PYTHON_DIR}
-)
-add_custom_target(python${PYTHON_VERSION} DEPENDS python${PYTHON_VERSION}-external openssl)
-add_custom_target(python${PYTHON_VERSION}-postinstall
-    DEPENDS python${PYTHON_VERSION}
-    COMMAND ${PYTHON} ${EXTERNAL}/python-${PYTHON_VERSION}/get-pip.py
-    COMMENT "Setting up pip"
-)
-set(PIP "${PYTHON_DIR}/bin/pip${PYTHON_VERSION}")
-
-
-if(LINUX)
-
-    ## libcurl
-
-    set(CURL_PREFIX "${PROJECT_BINARY_DIR}/curl-prefix")
-    set(CURL_DIR "${PROJECT_BINARY_DIR}/curl")
-    ExternalProject_Add(
-        libcurl-external
-        URL "${EXTERNAL}/curl/curl-${CURL_VERSION}.zip"
-        PREFIX "${CURL_PREFIX}"
-        CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env "CPPFLAGS=-I${OPENSSL_DIR}" "LDFLAGS=-L${OPENSSL_DIR}/lib" ./configure --with-ssl=${OPENSSL_DIR} --prefix=${CURL_DIR}
-        BUILD_COMMAND make
-        BUILD_IN_SOURCE 1
-        INSTALL_COMMAND make install
-    )
-    add_custom_target(libcurl DEPENDS libcurl-external)
-
-endif()
-if(APPLE)
-    add_custom_target(libcurl) # nop
-endif()
-
-
-## pycurl
-
-if(LINUX)
-    set(PYCURL_OPTS --curl-config=${CURL_DIR}/bin/curl-config --with-ssl)
-endif()
-if(APPLE)
-    set(PYCURL_OPTS "")
-endif()
-
-set(PYCURL_PREFIX "${PROJECT_BINARY_DIR}/pycurl-prefix")
-set(PYCURL_DIR "${PROJECT_BINARY_DIR}/pycurl")
-set(PYCURL_SOURCE "${PYCURL_PREFIX}/src/pycurl-external")
-ExternalProject_Add(
-    pycurl-external
-    DEPENDS python${PYTHON_VERSION} libcurl
-    URL "${EXTERNAL}/pycurl/pycurl-${PYCURL_VERSION}.tar.gz"
-    PREFIX "${PYCURL_PREFIX}"
-    CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${PYTHON} ${PYCURL_SOURCE}/setup.py install ${PYCURL_OPTS}
-            INSTALL_COMMAND ""
-)
-add_custom_target(pycurl DEPENDS pycurl-external)
-
 
 ## wxWidgets
 
@@ -214,41 +91,12 @@ set(wxWidgets_CONFIGURATION mswu)
 find_package(wxWidgets REQUIRED core base net webview)
 include(${wxWidgets_USE_FILE})
 
-## PIP prerequisites
-
-add_custom_target(requirements-install-base
-    DEPENDS python${PYTHON_VERSION} python${PYTHON_VERSION}-postinstall openssl libcurl pycurl
-    COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${SSL_DIR}/lib:${CURL_DIR}/lib ${PIP} install -r ${PROJECT_SOURCE_DIR}/requirements-base1.txt
-    COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${SSL_DIR}/lib:${CURL_DIR}/lib ${PIP} install -r ${PROJECT_SOURCE_DIR}/requirements-base2.txt
-)
-
-add_custom_target(requirements-install-extra
-    DEPENDS python${PYTHON_VERSION} python${PYTHON_VERSION}-postinstall openssl libcurl pycurl
-    COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${SSL_DIR}/lib:${CURL_DIR}/lib ${PIP} install -r ${PROJECT_SOURCE_DIR}/requirements-extra1.txt
-    COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${SSL_DIR}/lib:${CURL_DIR}/lib ${PIP} install -r ${PROJECT_SOURCE_DIR}/requirements-extra2.txt
-)
-
-if (INCLUDE_EXTRA_PACKAGES)
-    add_custom_target(requirements-install
-        DEPENDS requirements-install-base requirements-install-extra
-        COMMAND ${PROJECT_SOURCE_DIR}/scripts/clean-python.sh ${PYTHON_DIR}
-    )
-else()
-    add_custom_target(requirements-install DEPENDS requirements-install-base
-        COMMAND ${PROJECT_SOURCE_DIR}/scripts/clean-python.sh ${PYTHON_DIR}
-    )
-endif()
-
-add_custom_target(requirements-clean
-    COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${SSL_DIR}/lib:${CURL_DIR}/lib ${PIP} freeze | ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${SSL_DIR}/lib:${CURL_DIR}/lib xargs ${PIP} uninstall -y
-)
-
 # Server resources
 set(LESSC "lessc")
 if (PYTHON_FRAMEWORK_BUILD)
     set(CUSTOM_DIR "${PYTHON_DIR}/Python.framework/Versions/${PYTHON_VERSION}/lib/python${PYTHON_VERSION}/site-packages/notebook/static/custom/")
 else()
-    set(CUSTOM_DIR "${PYTHON_DIR}/lib/python${PYTHON_VERSION}/site-packages/notebook/static/custom/")
+    set(CUSTOM_DIR "custom/")
 endif()
 add_custom_target(custom-reinstall-first
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/custom" "${CUSTOM_DIR}"
@@ -264,7 +112,6 @@ add_custom_target(compile-less
 add_custom_target(custom-reinstall
     DEPENDS compile-less)
 add_custom_target(custom-install DEPENDS requirements-install custom-reinstall)
-
 
 
 #### PINEAPPLE

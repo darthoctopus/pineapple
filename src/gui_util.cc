@@ -44,7 +44,7 @@ std::string python_fullpath()
     // Look for python in resource location
     // wxString respath(wxStandardPaths::Get().GetResourcesDir());
     // std::string sep("/");
-    return std::string ("/usr/bin/python") //(respath) + sep + config::python_dir + sep + config::python_name;
+    return std::string ("/usr/bin/python"); //(respath) + sep + config::python_dir + sep + config::python_name;
 }
 
 /// Get filename of server

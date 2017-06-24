@@ -24,6 +24,15 @@ if __name__ == '__main__':
     sys.argv = [sys.executable, '--port={}'.format(port), '/']
     os.environ['JUPYTER_CONFIG_DIR'] = get_config_dir()
     os.environ['JUPYTER_DATA_DIR'] = get_data_dir()
+
+    # Symlink custom resources
+    customres = os.path.dirname(__file__) + '/custom'
+    try:
+	    os.symlink(customres, os.environ['JUPYTER_CONFIG_DIR'] + '/custom')
+	except:
+	    pass
+    
+
     from notebook.notebookapp import NotebookApp
     app = NotebookApp()
     app.open_browser = False

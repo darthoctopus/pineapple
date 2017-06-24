@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Pineapple
+Comment=Interactive frontend for Jupyter Notebook
+Exec="/usr/bin/Pineapple" %U
+Terminal=false
+Type=Application
+Icon=/usr/share/Pineapple/Pineapple-256.png
+MimeType=application/x-ipynb+json;
+StartupNotify=true

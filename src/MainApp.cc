@@ -65,9 +65,6 @@ bool MainApp::OnInit()
     // Load preferences
     preferences.SyncRead();
 
-    // Register local python if needed
-    RegisterPython();
-
     // Load blank notebook so we can do "New"
     blank_notebook = read_all_file(resource_filename(
         config::blank_notebook_filename));
@@ -213,75 +210,6 @@ void MainApp::CloseAll()
             it->Close();
         }
     }
-}
-
-void MainApp::RegisterPython()
-{
-    // This function grabs environment, should be called before unsetting python env vars
-    std::string sep("/");
-    std::vector<std::string> path {
-        std::string(wxGetHomeDir()),
-        ".Pineapple",
-        "Jupyter",
-        "kernels",
-        "local"
-    };
-    std::string filename(path[0]);
-    for (size_t i = 1; i < path.size(); i++) {
-        filename += sep + path[i];
-    }
-    filename += sep + std::string("kernel.json");
-    if (wxFileExists(filename)) {
-        // Already registered
-        return;
-    }
-
-    // Do "which python"
-    wxProcess *which(new wxProcess(this));
-    which->Redirect();
-    long res;
-    res = wxExecute("which python3", wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE, which);
-    if (res) {
-        // Could not do "which python", done trying to register
-        return;
-    }
-    wxStdInputStream in(*which->GetInputStream());
-    std::string location;
-    std::getline(in, location);
-
-    Json::Value kernel_config;
-    kernel_config["display_name"] = "Local Python";
-    kernel_config["language"] = "python";
-    kernel_config["argv"] = Json::arrayValue;
-    kernel_config["argv"].append(location);
-    kernel_config["argv"].append("-m");
-    kernel_config["argv"].append("ipykernel");
-    kernel_config["argv"].append("-f");
-    kernel_config["argv"].append("{connection_file}");
-    kernel_config["env"] = Json::objectValue;
-    for (std::string key : protected_env_vars) {
-        wxString val;
-        if (wxGetEnv(key, &val)) {
-            kernel_config["env"][key] = std::string(val);
-        }
-    }
-
-    // Make it styled since the point is to be editable
-    Json::StyledWriter writer;
-    std::string kernelspec(writer.write(kernel_config));
-
-    // Create directories as needed
-    for (size_t i = 2; i <= path.size(); i++) {
-        std::string subpath(path[0]);
-        for (size_t j = 1; j < i; j++) {
-            subpath += sep + path[j];
-        }
-        if (!wxDirExists(subpath)) {
-            wxMkdir(subpath);
-        }
-    }
-    // Write the kernelspec
-    write_file(filename, kernelspec);
 }
 
 void MainApp::OnSubprocessTerminate(wxProcessEvent &/* event */)

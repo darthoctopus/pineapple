@@ -111,7 +111,7 @@ add_custom_target(compile-less
 )
 add_custom_target(custom-reinstall
     DEPENDS compile-less)
-add_custom_target(custom-install DEPENDS requirements-install custom-reinstall)
+add_custom_target(custom-install DEPENDS custom-reinstall)
 
 
 #### PINEAPPLE
@@ -242,6 +242,8 @@ install (FILES ${DATAFILES}
     DESTINATION "${APP_RES}")
 install (FILES "scripts/pineapple-server"
     DESTINATION "${APP_RES}")
+install (DIRECTORY ${CUSTOM_DIR}
+    DESTINATION "${APP_RES}/custom")
 
 if(APPLE AND PYTHON_FRAMEWORK_BUILD)
 
@@ -291,18 +293,6 @@ if(APPLE AND PYTHON_FRAMEWORK_BUILD)
 else()
 
     file (GLOB binprogs "${PROJECT_BINARY_DIR}/python${PYTHON_VERSION}/bin/*")
-    install (DIRECTORY "${PROJECT_BINARY_DIR}/python${PYTHON_VERSION}/include" DESTINATION "${APP_RES}/python${PYTHON_VERSION}")
-    install (DIRECTORY "${PROJECT_BINARY_DIR}/python${PYTHON_VERSION}/lib" DESTINATION "${APP_RES}/python${PYTHON_VERSION}")
-    install (DIRECTORY "${PROJECT_BINARY_DIR}/python${PYTHON_VERSION}/share" DESTINATION "${APP_RES}/python${PYTHON_VERSION}")
-    install (PROGRAMS ${binprogs}
-        DESTINATION "${APP_RES}/python${PYTHON_VERSION}/bin")
-#    install (PROGRAMS ${PROJECT_SOURCE_DIR}
-#        DESTINATION "${APP_RES}/python${PYTHON_VERSION}/bin")
-
-    # Clean up to make final size smaller
-    install (CODE "
-        execute_process(COMMAND ${PROJECT_SOURCE_DIR}/scripts/clean-python.sh \"\${CMAKE_INSTALL_PREFIX}/${APP_RES}/python${PYTHON_VERSION}\")
-    ")
 
     # rpath fixups (simpler for non framework builds)
     if(APPLE)
@@ -320,7 +310,7 @@ endif()
 if (PYTHON_FRAMEWORK_BUILD)
     set(CUSTOM_INSTALL_LOCATION "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app/Contents/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib/python${PYTHON_VERSION}/site-packages/notebook/static/custom")
 else()
-    set(CUSTOM_INSTALL_LOCATION "${CMAKE_INSTALL_PREFIX}/${APP_RES}/python${PYTHON_VERSION}/lib/python${PYTHON_VERSION}/site-packages/notebook/static/custom")
+    set(CUSTOM_INSTALL_LOCATION "${CMAKE_INSTALL_PREFIX}/${APP_RES}/custom")
 endif()
 add_custom_target(custom-install-dev
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CUSTOM_INSTALL_LOCATION}"
@@ -340,7 +330,7 @@ set (CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set (CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set (CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
 set (CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME}" "${PROJECT_NAME}")
-set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-Python${PYTHON_VERSION}")
+set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 if (INCLUDE_EXTRA_PACKAGES)
     set (CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-Full")
 endif()

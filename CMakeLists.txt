@@ -245,6 +245,11 @@ install (FILES "scripts/pineapple-server"
 install (DIRECTORY ${CUSTOM_DIR}
     DESTINATION "${APP_RES}/custom")
 
+if(LINUX)
+	install (FILES "scripts/pineapple.desktop"
+	DESTINATION "share/applications")
+endif()
+
 if(APPLE AND PYTHON_FRAMEWORK_BUILD)
 
     configure_file("${PROJECT_SOURCE_DIR}/scripts/pip" "${PROJECT_BINARY_DIR}/scripts/pip${PYTHON_VERSION}" @ONLY)

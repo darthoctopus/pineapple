@@ -6,6 +6,13 @@ Pineapple was a standalone Jupyter notebook client originally written by [Nathan
 
 - System python3 is used instead of a bundled installation (to simplify maintenance for me). Effectively this is now a thin GUI client for Jupyter notebooks. I still find this preferable to electron, to the extent that my native look-and-feel is better preserved. Note that python3 is only used for running the network server and Jupyter notebook; Python2 kernels can be used (as is already the case with Jupyter) regardless.
 
+### Known issues
+
+- Jupyter 5 broke many of Nathan's original scripts. In particular:
+  - in-notebook tabs no longer work
+  - The original callback to get the kernel list on page load broke. The kernel list is now populated the first time you re-enter command mode.
+- On Arch Linux, the gtk3 version spawns a WebKitWebProcess that will reliably shoot up to 100% CPU utilisation after a while. This seems to be a problem with `webkit2gtk`, since the gtk2 version (which uses `webkitgtk2`) works just fine. Unfortunately, `webkitgtk2` is about to be removed from the official repositories. I've had some success ameliorating this by using the `libwx_gtk3u_webview-3.0.so.0.2.0` from Fedora, but YMMV.
+
 ## Building Prerequisites
 
 General requirements:

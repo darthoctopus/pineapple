@@ -320,7 +320,7 @@ void MainFrame::SetupLayout(const wxPoint &/* pos */, const wxSize &size)
 
     frame_sizer->Add(toolbar, 0, wxEXPAND, 0);
     frame_sizer->Add(webview, 1, wxEXPAND, 10);
-    webview->Show();
+    // webview->Show();
     SetSizerAndFit(frame_sizer);
     SetSize(wxDefaultCoord, wxDefaultCoord, size.GetWidth(), size.GetHeight());
 }

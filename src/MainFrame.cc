@@ -782,13 +782,13 @@ void MainFrame::UpdateTheme()
 void MainFrame::OnPageLoad(wxWebViewEvent &/* event */)
 {
     wxLogDebug("MainFrame::OnPageLoad");
-    eval_js("if (Jupyter) { 1 } else { 0 }", [this](std::string x) {
+    /*eval_js("if (Jupyter) { 1 } else { 0 }", [this](std::string x) {
         if (x == std::string("1")) {
             jupyter_ready = true;
         }
         wxLogDebug("MainFrame::OnPageLoad::callback Page loaded jupyter=%s", jupyter_ready ? "true" : "false");
     });
-    UpdateTheme();
+    UpdateTheme();*/
 }
 
 void MainFrame::OnNewWindow(wxWebViewEvent &event)
@@ -801,6 +801,15 @@ void MainFrame::OnTitleChanged(wxWebViewEvent &event)
 {
     std::string title = event.GetString().ToStdString();
     wxLogDebug("MainFrame::OnTitleChanged [%s]", title);
+
+    // Pageload callback doesn't work for some reason
+    // segfaults on wxgtk 3.1.1
+    // we handle it specially here
+    if (title == "Jupyter Notebook"){
+	jupyter_ready = true;
+	UpdateTheme();
+    }
+
     // Check if starts with special prefix
     std::string prefix = config::protocol_prefix;
     if (std::equal(prefix.begin(), prefix.end(), title.begin())) {

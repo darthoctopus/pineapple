@@ -20,6 +20,20 @@ define([
         document.title = txt;
         document.title = old;
     };
+
+
+    var truncate = function(json) {
+	pool = {}
+	for (var key in json){
+	    pool[key] = {
+		    "name": json[key]["name"],
+		    "spec": {
+			    "display_name": json[key]["spec"]["display_name"]
+		    }
+	    }
+	}
+	return pool;
+    }
     events.on('kernel_busy.Kernel', function (evt) {
         flash('$$$$-1|true');
     });
@@ -31,7 +45,7 @@ define([
     events.on('command_mode.Notebook', function(evt) {
         var selector = IPython.notebook.kernel_selector;
         var response = function() {
-            flash('$$$$-3|' + JSON.stringify(selector.kernelspecs));
+            flash('$$$$-3|' + JSON.stringify(truncate(selector.kernelspecs)));
         };
         if (selector._loaded) {
             response();

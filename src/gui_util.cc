@@ -90,7 +90,7 @@ wxBitmap toolbar_icon(std::string filename)
 /// Click a menu item by name (hidden in our webview)
 void jupyter_click_cell(wxWebView *wv, std::string id)
 {
-    std::string cmd = "Jupyter.menubar.element.find('#" + id + "').click();";
+    std::string cmd = "Jupyter.menubar.element.find('#" + id + "').click(); true";
     wv->RunScript(cmd);
 }
 

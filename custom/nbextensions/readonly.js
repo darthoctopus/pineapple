@@ -6,10 +6,10 @@
  */
 define([
     'base/js/namespace',
-    'base/js/events',
+    'base/js/promises',
     'notebook/js/notebook',
     'notebook/js/cell'
-], function(IPython, events, notebook, cell) {
+], function(IPython, promises, notebook, cell) {
 
     /**
      * Set codecell to read-only 
@@ -49,7 +49,7 @@ define([
     }
 
     // Wait until notebook loaded, then update readonly data
-    events.on('notebook_loaded.Notebook', function() {
+    promises.notebook_loaded.then(function(appname) {
         // loop through notebook and set read-only cells defined in metadata
         var cells = IPython.notebook.get_cells();
         for(var i in cells){

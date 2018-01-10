@@ -7,10 +7,10 @@
 define([
     'jquery',
     'base/js/namespace',
-    'base/js/events',
+    'base/js/promises',
     'notebook/js/notebook',
     'notebook/js/cell'
-], function($, IPython, events, notebook, cell) {
+], function($, IPython, promises, notebook, cell) {
 
     var sheet = 0;
     var tabSelectorElement = undefined;
@@ -161,7 +161,7 @@ define([
     }
 
     // Wait until notebook loaded, then update all cells
-    events.on('notebook_loaded.Notebook', function() {
+    promises.notebook_loaded.then(function(appname) {
         var cells = IPython.notebook.get_cells();
         for(var i in cells){
             var cell = cells[i];

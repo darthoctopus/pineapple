@@ -6,13 +6,14 @@
 define([
     'base/js/namespace',
     'base/js/events',
+    'base/js/promises',
     'notebook/js/notebook',
     'notebook/js/cell',
     'custom/nbextensions/theme',
     'custom/nbextensions/readonly',
     'custom/nbextensions/button',
     'custom/nbextensions/tabs',
-], function(IPython, events, notebook, cell, theme, readOnly, button, tabs) {
+], function(Jupyter, events, promises, notebook, cell, theme, readOnly, button, tabs) {
 
     /// Register permanent events
     var flash = function(txt) {
@@ -42,8 +43,9 @@ define([
     });
 
     // When notebook is loaded and kernel_selector filled, respond
-    events.on('command_mode.Notebook', function(evt) {
-        var selector = IPython.notebook.kernel_selector;
+    // requires at least Jupyter notebook 5.1 (promise not implemented in 5.0)
+    promises.notebook_loaded.Notebook.then(function(appname) {
+        var selector = Jupyter.notebook.kernel_selector;
         var response = function() {
             flash('$$$$-3|' + JSON.stringify(truncate(selector.kernelspecs)));
         };

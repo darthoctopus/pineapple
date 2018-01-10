@@ -44,7 +44,7 @@ define([
 
     // When notebook is loaded and kernel_selector filled, respond
     // requires at least Jupyter notebook 5.1 (promise not implemented in 5.0)
-    promises.notebook_loaded.Notebook.then(function(appname) {
+    promises.notebook_loaded.then(function(appname) {
         var selector = Jupyter.notebook.kernel_selector;
         var response = function() {
             flash('$$$$-3|' + JSON.stringify(truncate(selector.kernelspecs)));
